@@ -6,6 +6,15 @@ AI-drafted weekly plans for your part-time household manager
 needs, and seasonal Spokane considerations. Editable, printable, saved
 to a month-organized library.
 
+## What's in the app
+
+- **Dashboard:** generate AI plans from week notes, edit standing duties
+- **Editable plan view:** every task has a checkbox the manager can tick off; each day has an Hours Worked input and a separate "Household Manager's Notes" area below your planning notes
+- **Print:** prints with empty checkboxes, blank hours field, and blank manager notes — ready for a paper-based shift. Screen view keeps everything she's input.
+- **Copy to New Week:** turn any saved plan into a template for an upcoming week (resets all checks, hours, and manager notes; keeps tasks/sections/your planning notes)
+- **Reset Checkmarks:** clears all checks + hours on the current plan (keeps manager notes)
+- **Library:** plans grouped by month, with a per-week and per-month hours summary so you can see at a glance what she worked
+
 ---
 
 ## What you need

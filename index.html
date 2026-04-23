@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
 <title>House Manager</title>
 
-<!-- Local config (gitignored). On Netlify this is auto-generated from env vars at build time.
-     Locally, copy config.example.js → config.js and fill in your Supabase values. -->
+<!-- Local config (gitignored). On Netlify this is auto-generated from env vars at build time. -->
 <script src="config.js" onerror="window.__CONFIG_MISSING=true"></script>
 
 <!-- Supabase JS client -->
@@ -27,6 +26,7 @@
     --muted: #75695A;
     --accent: #8C7E68;
     --accent-dark: #6B5F4D;
+    --done: #A8A092;
   }
 
   html, body {
@@ -123,7 +123,7 @@
     color: var(--muted);
     margin-bottom: 6px;
   }
-  input[type="date"], input[type="text"], textarea {
+  input[type="date"], input[type="text"], input[type="number"], textarea {
     width: 100%;
     background: var(--tile-bg-soft);
     border: 1px solid var(--border);
@@ -136,7 +136,7 @@
     appearance: none;
     transition: border-color 0.15s, background 0.15s;
   }
-  input[type="date"]:focus, input[type="text"]:focus, textarea:focus {
+  input[type="date"]:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
     outline: none;
     border-color: var(--accent);
     background: var(--ivory);
@@ -333,6 +333,14 @@
   .config-warning strong { display: block; margin-bottom: 4px; font-size: 14px; }
   .config-warning code { background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 3px; font-size: 12px; }
 
+  .save-indicator {
+    font-size: 11px;
+    color: var(--muted);
+    transition: opacity 0.3s;
+  }
+  .save-indicator.show { opacity: 1; }
+  .save-indicator.hidden { opacity: 0; }
+
   /* ============ LIBRARY ============ */
   .month-group { margin-bottom: 22px; }
   .month-head {
@@ -355,6 +363,23 @@
   }
   .plan-row-title { font-weight: 500; }
   .plan-row-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .plan-row-hours {
+    font-size: 11px;
+    color: var(--text);
+    margin-top: 4px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .plan-row-hours .pill {
+    background: var(--ivory);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-weight: 500;
+  }
+  .plan-row-hours .pill.total { background: var(--text); color: var(--ivory); border-color: var(--text); }
+  .plan-row-hours .pill.empty { color: var(--muted); font-style: italic; }
   .plan-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
   .empty {
     text-align: center;
@@ -436,6 +461,44 @@
     letter-spacing: 0.24em;
     margin-top: 4pt;
   }
+
+  /* ============ HOURS WORKED ============ */
+  .pp-hours {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6pt;
+    margin-top: 5pt;
+    padding-top: 4pt;
+    border-top: 0.5px solid var(--divider);
+  }
+  .pp-hours-label {
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .pp-hours-input {
+    width: 50pt;
+    background: var(--ivory);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 2pt 5pt;
+    font-family: inherit;
+    font-size: 9pt;
+    color: var(--text);
+    text-align: center;
+    -webkit-appearance: none;
+    appearance: none;
+    -moz-appearance: textfield;
+  }
+  .pp-hours-input::-webkit-outer-spin-button,
+  .pp-hours-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .pp-hours-input:focus { outline: none; border-color: var(--accent); }
+  .pp-hours-input.print-only { display: none; }
+  .pp-hours-units { font-size: 8pt; color: var(--muted); }
+
   .pp-section { margin-bottom: 0.09in; }
   .pp-sec-head-row {
     display: flex;
@@ -455,32 +518,86 @@
     min-width: 0;
     line-height: 1.2;
   }
+
+  /* ============ TASK ROWS WITH CHECKBOXES ============ */
   .pp-tasks { list-style: none; padding-left: 1pt; }
   .pp-tasks li {
-    position: relative;
-    padding-left: 12pt;
+    display: flex;
+    align-items: flex-start;
+    gap: 5pt;
     padding-right: 14pt;
     font-size: 8.75pt;
     line-height: 1.42;
     margin-bottom: 0.5pt;
+    position: relative;
   }
-  .pp-tasks li::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 4.5pt;
-    width: 5pt;
-    height: 5pt;
-    border: 0.75px solid var(--accent);
-    border-radius: 1px;
-    background: var(--ivory);
+  .pp-extras-list { list-style: none; columns: 2; column-gap: 0.35in; margin-top: 0.04in; margin-bottom: 0.04in; }
+  .pp-extras-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 5pt;
+    padding-right: 14pt;
+    font-size: 8.75pt;
+    line-height: 1.45;
+    margin-bottom: 2pt;
+    break-inside: avoid;
+    position: relative;
   }
 
-  .pp-notes {
+  .task-check {
+    flex-shrink: 0;
+    margin-top: 3pt;
+    width: 8pt;
+    height: 8pt;
+    border: 0.75px solid var(--accent);
+    border-radius: 1.5px;
+    background: var(--ivory);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    display: inline-block;
+    transition: all 0.1s;
+    padding: 0;
+  }
+  .task-check:hover { border-color: var(--text); }
+  .task-check:checked {
+    background: var(--text);
+    border-color: var(--text);
+  }
+  .task-check:checked::after {
+    content: "";
+    position: absolute;
+    left: 1.5pt;
+    top: 0pt;
+    width: 3pt;
+    height: 5pt;
+    border: solid var(--ivory);
+    border-width: 0 1pt 1pt 0;
+    transform: rotate(45deg);
+  }
+  .task-text {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
+  .pp-tasks li.done .task-text,
+  .pp-extras-list li.done .task-text {
+    color: var(--done);
+    text-decoration: line-through;
+    text-decoration-thickness: 0.5pt;
+  }
+
+  /* ============ NOTES (PLANNER + MANAGER) ============ */
+  .pp-notes-block {
     margin-top: auto;
     padding-top: 0.1in;
     border-top: 1px dashed var(--border);
   }
+  .pp-notes-section {
+    margin-bottom: 0.08in;
+  }
+  .pp-notes-section:last-child { margin-bottom: 0; }
   .pp-notes-label {
     font-size: 7.5pt;
     font-weight: 600;
@@ -490,44 +607,20 @@
     margin-bottom: 4pt;
   }
   .pp-notes-area {
-    min-height: 0.45in;
+    min-height: 0.4in;
     font-size: 9pt;
     line-height: 1.5;
     background-image: linear-gradient(transparent 95%, var(--divider) 95%);
     background-size: 100% 14pt;
     background-position: 0 11pt;
   }
-  .pp-tiles .pp-notes-area { min-height: 0.4in; }
+  .pp-tiles .pp-notes-area { min-height: 0.32in; }
+
   .pp-extras .pp-tile-header { margin-bottom: 0.1in; }
-  .pp-extras-list {
-    list-style: none;
-    columns: 2;
-    column-gap: 0.35in;
-    margin-top: 0.04in;
-    margin-bottom: 0.04in;
-  }
-  .pp-extras-list li {
-    position: relative;
-    padding-left: 12pt;
-    padding-right: 14pt;
-    font-size: 8.75pt;
-    line-height: 1.45;
-    margin-bottom: 2pt;
-    break-inside: avoid;
-  }
-  .pp-extras-list li::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 4.5pt;
-    width: 5pt;
-    height: 5pt;
-    border: 0.75px solid var(--accent);
-    border-radius: 1px;
-    background: var(--ivory);
-  }
-  .pp-extras .pp-notes { margin-top: 0.08in; padding-top: 0.08in; }
-  .pp-extras .pp-notes-area { min-height: 0.35in; }
+  .pp-extras-list li::before { content: none; }
+
+  .pp-extras .pp-notes-block { margin-top: 0.08in; padding-top: 0.08in; }
+  .pp-extras .pp-notes-area { min-height: 0.28in; }
 
   [contenteditable="true"] {
     cursor: text;
@@ -619,10 +712,16 @@
     .printable-wrap { padding: 18px 14px; }
     .pp-title { font-size: 22pt; }
     .pp-tile, .pp-extras { padding: 14px; }
-    .pp-tasks li, .pp-extras-list li { font-size: 14px; padding-left: 16px; padding-right: 30px; line-height: 1.4; margin-bottom: 4px; }
+    .pp-tasks li, .pp-extras-list li { font-size: 14px; padding-right: 30px; line-height: 1.4; margin-bottom: 6px; gap: 10px; }
+    .task-check { width: 18px; height: 18px; margin-top: 2px; border-width: 1.5px; border-radius: 3px; }
+    .task-check:checked::after { left: 4px; top: 0px; width: 6px; height: 11px; border-width: 0 2px 2px 0; }
     .pp-sec-heading { font-size: 11px; letter-spacing: 0.12em; }
     .pp-tile-heading { font-size: 18pt; }
     .pp-notes-area { min-height: 60px; font-size: 14px; background-size: 100% 22px; background-position: 0 18px; }
+    .pp-hours { gap: 8pt; }
+    .pp-hours-label { font-size: 10px; }
+    .pp-hours-input { font-size: 14px; width: 60pt; padding: 4pt 6pt; }
+    .pp-hours-units { font-size: 11px; }
     .ctrl-sec-x { opacity: 0.55; width: 28px; height: 28px; font-size: 18px; margin-bottom: 0; }
     .ctrl-task-x { opacity: 0.4; width: 26px; height: 26px; font-size: 16px; top: -2px; }
     .ctrl-add-task { padding: 6px 10px; font-size: 10px; border: 1px dashed var(--border); border-radius: 4px; margin-left: 0; margin-top: 6px; opacity: 0.85; }
@@ -653,19 +752,70 @@
     .pp-extras .pp-tile-header { margin-bottom: 0.07in !important; }
     .pp-tile-heading { font-size: 13pt !important; }
     .pp-tile-subtitle { font-size: 6.5pt !important; margin-top: 3pt !important; }
+
+    /* Print: blank checkboxes, blank hours field, blank manager notes */
+    .pp-hours { margin-top: 3pt !important; padding-top: 3pt !important; }
+    .pp-hours-label { font-size: 6.5pt !important; }
+    .pp-hours-input { display: none !important; }
+    .pp-hours-print {
+      display: inline-block !important;
+      width: 38pt !important;
+      border-bottom: 0.5px solid var(--text) !important;
+      height: 11pt !important;
+      vertical-align: middle !important;
+    }
+    .pp-hours-units { font-size: 7pt !important; }
+
+    .task-check {
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      background: white !important;
+      border: 0.5px solid var(--text) !important;
+      width: 6.5pt !important;
+      height: 6.5pt !important;
+      margin-top: 3pt !important;
+      border-radius: 1px !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .task-check:checked { background: white !important; border-color: var(--text) !important; }
+    .task-check:checked::after { display: none !important; }
+
+    /* On print, all tasks look "undone" so the printed sheet is blank-checkbox ready */
+    .pp-tasks li.done .task-text,
+    .pp-extras-list li.done .task-text {
+      color: var(--text) !important;
+      text-decoration: none !important;
+    }
+
     .pp-section { margin-bottom: 0.06in !important; }
     .pp-sec-head-row { margin-bottom: 2pt !important; padding-bottom: 1pt !important; }
     .pp-sec-heading { font-size: 7.5pt !important; letter-spacing: 0.1em !important; }
+
     .pp-tasks li, .pp-extras-list li {
       font-size: 8.25pt !important; line-height: 1.32 !important;
-      padding-left: 11pt !important; padding-right: 0 !important; margin-bottom: 0 !important;
+      padding-right: 0 !important; margin-bottom: 0 !important;
+      gap: 4pt !important;
     }
-    .pp-tasks li::before, .pp-extras-list li::before { top: 4pt !important; width: 4.5pt !important; height: 4.5pt !important; }
-    .pp-notes { padding-top: 0.06in !important; }
-    .pp-extras .pp-notes { padding-top: 0.06in !important; margin-top: 0.05in !important; }
+
+    .pp-notes-block { padding-top: 0.06in !important; }
+    .pp-extras .pp-notes-block { padding-top: 0.06in !important; margin-top: 0.05in !important; }
+    .pp-notes-section { margin-bottom: 0.05in !important; }
     .pp-notes-label { font-size: 6.5pt !important; margin-bottom: 2pt !important; }
-    .pp-tiles .pp-notes-area { min-height: 0.28in !important; font-size: 8pt !important; background-size: 100% 12pt !important; background-position: 0 9pt !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .pp-extras .pp-notes-area { min-height: 0.22in !important; font-size: 8pt !important; background-size: 100% 12pt !important; background-position: 0 9pt !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .pp-tiles .pp-notes-area, .pp-extras .pp-notes-area {
+      background-image: linear-gradient(transparent 95%, var(--divider) 95%) !important;
+      background-size: 100% 11pt !important;
+      background-position: 0 8pt !important;
+      font-size: 8pt !important;
+      min-height: 0.22in !important;
+      color: transparent !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    /* Manager notes print larger because she'll fill it in by hand */
+    .pp-tiles .pp-notes-section.manager .pp-notes-area { min-height: 0.42in !important; }
+    .pp-extras .pp-notes-section.manager .pp-notes-area { min-height: 0.32in !important; }
+
     [contenteditable="true"]:hover, [contenteditable="true"]:focus { outline: none !important; background: transparent !important; }
   }
 </style>
@@ -687,7 +837,7 @@
 
 <script>
 /* =====================================================================
-   DEFAULT STANDING DUTIES (used on first run / reset)
+   DEFAULTS
    ===================================================================== */
 const DEFAULT_STANDING = {
   tuesday: [
@@ -715,7 +865,7 @@ const state = {
 };
 
 /* =====================================================================
-   SUPABASE CLIENT
+   SUPABASE
    ===================================================================== */
 let sb = null;
 function initSupabase() {
@@ -727,15 +877,9 @@ function initSupabase() {
   try {
     sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
     return true;
-  } catch (e) {
-    console.error('Supabase init failed:', e);
-    return false;
-  }
+  } catch (e) { console.error('Supabase init failed:', e); return false; }
 }
 
-/* =====================================================================
-   STORAGE LAYER (Supabase)
-   ===================================================================== */
 async function loadStandingDuties() {
   const { data, error } = await sb.from('standing_duties').select('data').eq('id', 1).maybeSingle();
   if (error) { console.error('load standing', error); return null; }
@@ -748,11 +892,18 @@ async function saveStandingDuties(duties) {
   if (error) console.error('save standing', error);
 }
 async function loadPlansIndex() {
+  // Pull data too so we can summarize hours in the Library
   const { data, error } = await sb.from('plans')
-    .select('id, week_date, saved_at')
+    .select('id, week_date, saved_at, data')
     .order('week_date', { ascending: false });
   if (error) { console.error('load index', error); return []; }
-  return (data || []).map(r => ({ id: r.id, weekDate: r.week_date, savedAt: r.saved_at }));
+  return (data || []).map(r => ({
+    id: r.id,
+    weekDate: r.week_date,
+    savedAt: r.saved_at,
+    tuesdayHours: r.data?.tuesdayHours || 0,
+    thursdayHours: r.data?.thursdayHours || 0
+  }));
 }
 async function loadPlan(id) {
   const { data, error } = await sb.from('plans').select('*').eq('id', id).single();
@@ -771,6 +922,8 @@ async function savePlan(plan) {
       tuesday: plan.tuesday,
       thursday: plan.thursday,
       weeklyExtras: plan.weeklyExtras,
+      tuesdayHours: plan.tuesdayHours || 0,
+      thursdayHours: plan.thursdayHours || 0,
       notes: plan.notes,
       createdAt: plan.createdAt
     }
@@ -790,7 +943,7 @@ async function deletePlan(id) {
 }
 
 /* =====================================================================
-   AI GENERATION (via Netlify Function)
+   AI GENERATION
    ===================================================================== */
 async function generatePlan(weekDateISO, userNotes, recentPlans) {
   const response = await fetch('/api/generate-plan', {
@@ -802,7 +955,7 @@ async function generatePlan(weekDateISO, userNotes, recentPlans) {
       standingDuties: state.standing,
       recentPlans: (recentPlans || []).map(p => ({
         weekDate: p.weekDate,
-        extras: (p.weeklyExtras?.items || []).slice(0, 3)
+        extras: (p.weeklyExtras?.items || []).map(it => typeof it === 'string' ? it : it.text).slice(0, 3)
       }))
     })
   });
@@ -821,12 +974,35 @@ async function generatePlan(weekDateISO, userNotes, recentPlans) {
     throw err;
   }
 
+  // Normalize tasks/items into objects with done:false
+  const normalizeSections = secs => (secs || []).map(s => ({
+    heading: s.heading,
+    tasks: (s.tasks || []).map(t => typeof t === 'string' ? { text: t, done: false } : t)
+  }));
+  const normalizeItems = items => (items || []).map(it => typeof it === 'string' ? { text: it, done: false } : it);
+
   return {
     weekDate: weekDateISO,
     notes: userNotes,
-    tuesday: data.tuesday || { subtitle: 'Reset + Plan Day', sections: [], notes: '' },
-    thursday: data.thursday || { subtitle: 'Maintain + Prep Day', sections: [], notes: '' },
-    weeklyExtras: data.weeklyExtras || { items: [], notes: '' },
+    tuesday: {
+      subtitle: data.tuesday?.subtitle || 'Reset + Plan Day',
+      sections: normalizeSections(data.tuesday?.sections),
+      notes: data.tuesday?.notes || '',
+      managerNotes: ''
+    },
+    thursday: {
+      subtitle: data.thursday?.subtitle || 'Maintain + Prep Day',
+      sections: normalizeSections(data.thursday?.sections),
+      notes: data.thursday?.notes || '',
+      managerNotes: ''
+    },
+    weeklyExtras: {
+      items: normalizeItems(data.weeklyExtras?.items),
+      notes: data.weeklyExtras?.notes || '',
+      managerNotes: ''
+    },
+    tuesdayHours: 0,
+    thursdayHours: 0,
     createdAt: new Date().toISOString()
   };
 }
@@ -856,6 +1032,28 @@ function monthKey(iso) {
   const dt = new Date(y, m-1, 1);
   return dt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
+function fmtHours(n) {
+  if (!n || n === 0) return '0';
+  return Number(n) % 1 === 0 ? String(n) : Number(n).toFixed(2).replace(/\.?0+$/, '');
+}
+
+// Make older saved plans (with string tasks instead of {text,done} objects) work
+function normalizePlanForEditing(p) {
+  if (!p) return p;
+  const fixSections = secs => (secs || []).map(s => ({
+    heading: s.heading,
+    tasks: (s.tasks || []).map(t => typeof t === 'string' ? { text: t, done: false } : { text: t.text || '', done: !!t.done })
+  }));
+  const fixItems = items => (items || []).map(it => typeof it === 'string' ? { text: it, done: false } : { text: it.text || '', done: !!it.done });
+  return {
+    ...p,
+    tuesday: { ...p.tuesday, sections: fixSections(p.tuesday?.sections), managerNotes: p.tuesday?.managerNotes || '' },
+    thursday: { ...p.thursday, sections: fixSections(p.thursday?.sections), managerNotes: p.thursday?.managerNotes || '' },
+    weeklyExtras: { ...p.weeklyExtras, items: fixItems(p.weeklyExtras?.items), managerNotes: p.weeklyExtras?.managerNotes || '' },
+    tuesdayHours: p.tuesdayHours || 0,
+    thursdayHours: p.thursdayHours || 0
+  };
+}
 
 /* =====================================================================
    VIEW: DASHBOARD
@@ -865,27 +1063,18 @@ function renderDashboard() {
   let warning = '';
   if (!state.configOk) {
     if (window.__CONFIG_MISSING) {
-      warning = `
-        <div class="config-warning">
-          <strong>Setup needed: config.js not found</strong>
-          Locally: copy <code>config.example.js</code> to <code>config.js</code> and fill in your Supabase values.
-          On Netlify: set <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in
-          Site configuration → Environment variables, then redeploy.
-        </div>`;
+      warning = `<div class="config-warning"><strong>Setup needed: config.js not found</strong>
+        Locally: copy <code>config.example.js</code> to <code>config.js</code> and fill in your Supabase values.
+        On Netlify: set <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in Site configuration → Environment variables, then redeploy.</div>`;
     } else {
-      warning = `
-        <div class="config-warning">
-          <strong>Setup needed: Supabase not configured</strong>
-          The placeholder values in <code>config.js</code> haven't been replaced.
-          See README for setup instructions.
-        </div>`;
+      warning = `<div class="config-warning"><strong>Setup needed: Supabase not configured</strong>
+        The placeholder values in <code>config.js</code> haven't been replaced. See README.</div>`;
     }
   }
   main.innerHTML = warning + `
     <div class="card">
       <h2 class="card-title">Plan This Week</h2>
       <div class="card-subtitle">Tell the AI what's coming up</div>
-
       <div class="field-row">
         <div class="narrow">
           <label class="field" for="week-date">Week of</label>
@@ -893,10 +1082,8 @@ function renderDashboard() {
         </div>
         <div></div>
       </div>
-
       <label class="field" for="notes-in">Your thoughts &amp; priorities</label>
       <textarea id="notes-in" placeholder="What's on your mind for this week? Examples: 'Liam's birthday party Saturday — 12 kids, prep gift bags and tidy living room. In-laws arriving Sunday for 3 days. Need to clean out garage corner. Kids soccer tournament Sat morning.'"></textarea>
-
       <div class="btn-row" style="margin-top: 16px;">
         <button class="btn" id="gen-btn">Generate Plan</button>
         <button class="btn btn-ghost" id="blank-btn">Skip — start blank</button>
@@ -962,7 +1149,6 @@ function bindDashboardEvents() {
     renderDutiesCol('tuesday');
     renderDutiesCol('thursday');
   });
-
   ['duties-tue','duties-thu'].forEach(id => {
     const el = document.getElementById(id);
     el.addEventListener('input', onDutiesInput);
@@ -976,7 +1162,6 @@ function debouncedSaveDuties() {
   clearTimeout(dutiesSaveTimer);
   dutiesSaveTimer = setTimeout(() => { if (state.configOk) saveStandingDuties(state.standing); }, 600);
 }
-
 async function onDutiesInput(e) {
   const t = e.target;
   if (t.tagName !== 'INPUT') return;
@@ -984,31 +1169,25 @@ async function onDutiesInput(e) {
   if (!sec) return;
   const day = sec.dataset.day;
   const si = +sec.dataset.si;
-  if (t.dataset.action === 'edit-heading') {
-    state.standing[day][si].heading = t.value;
-  } else if (t.dataset.action === 'edit-task') {
-    const li = t.closest('li');
-    const ti = +li.dataset.ti;
+  if (t.dataset.action === 'edit-heading') state.standing[day][si].heading = t.value;
+  else if (t.dataset.action === 'edit-task') {
+    const li = t.closest('li'); const ti = +li.dataset.ti;
     state.standing[day][si].tasks[ti] = t.value;
   }
   debouncedSaveDuties();
 }
-
 async function onDutiesClick(e) {
   const btn = e.target.closest('button[data-action]');
   if (!btn) return;
-  const sec = btn.closest('.duty-section');
-  if (!sec) return;
-  const day = sec.dataset.day;
-  const si = +sec.dataset.si;
+  const sec = btn.closest('.duty-section'); if (!sec) return;
+  const day = sec.dataset.day; const si = +sec.dataset.si;
   if (btn.dataset.action === 'del-section') {
     if (!confirm('Delete this section?')) return;
     state.standing[day].splice(si, 1);
     if (state.configOk) await saveStandingDuties(state.standing);
     renderDutiesCol(day);
   } else if (btn.dataset.action === 'del-task') {
-    const li = btn.closest('li');
-    const ti = +li.dataset.ti;
+    const li = btn.closest('li'); const ti = +li.dataset.ti;
     state.standing[day][si].tasks.splice(ti, 1);
     if (state.configOk) await saveStandingDuties(state.standing);
     renderDutiesCol(day);
@@ -1021,7 +1200,6 @@ async function onDutiesClick(e) {
     lis[lis.length-1]?.querySelector('input')?.focus();
   }
 }
-
 async function onAddSection(e) {
   const day = e.target.dataset.day;
   state.standing[day].push({ heading: 'New Section', tasks: ['New task'] });
@@ -1042,7 +1220,7 @@ async function onGenerate() {
     if (state.configOk) {
       for (const idx of state.plansIndex.slice(0, 3)) {
         const p = await loadPlan(idx.id);
-        if (p) recent.push(p);
+        if (p) recent.push(normalizePlanForEditing(p));
       }
     }
     const plan = await generatePlan(weekDate, notes, recent);
@@ -1057,36 +1235,54 @@ async function onGenerate() {
 
 function onStartBlank() {
   const weekDate = document.getElementById('week-date').value || nextTuesdayISO();
+  const blankSections = (sections) => sections.map(s => ({
+    heading: s.heading,
+    tasks: s.tasks.map(t => ({ text: t, done: false }))
+  }));
   state.currentPlan = {
     weekDate,
     notes: '',
-    tuesday: { subtitle: 'Reset + Plan Day', sections: JSON.parse(JSON.stringify(state.standing.tuesday)), notes: '' },
-    thursday: { subtitle: 'Maintain + Prep Day', sections: JSON.parse(JSON.stringify(state.standing.thursday)), notes: '' },
-    weeklyExtras: { items: [], notes: '' },
+    tuesday: { subtitle: 'Reset + Plan Day', sections: blankSections(state.standing.tuesday), notes: '', managerNotes: '' },
+    thursday: { subtitle: 'Maintain + Prep Day', sections: blankSections(state.standing.thursday), notes: '', managerNotes: '' },
+    weeklyExtras: { items: [], notes: '', managerNotes: '' },
+    tuesdayHours: 0,
+    thursdayHours: 0,
     createdAt: new Date().toISOString()
   };
   switchView('plan');
 }
 
 /* =====================================================================
-   VIEW: PLAN (editable printable)
+   VIEW: PLAN (editable printable, with checkboxes + hours + manager notes)
    ===================================================================== */
 function renderPlan() {
   const main = document.getElementById('app-main');
   const p = state.currentPlan;
   if (!p) { switchView('dashboard'); return; }
 
-  const tile = (key, title, data) => `
+  const tile = (key, title, data, hoursKey) => `
     <article class="pp-tile" data-tile="${key}">
       <header class="pp-tile-header">
         <div class="pp-tile-heading">${title}</div>
-        <div class="pp-tile-subtitle" contenteditable="true">${escapeHtml(data.subtitle || '')}</div>
+        <div class="pp-tile-subtitle" contenteditable="true" data-field="subtitle">${escapeHtml(data.subtitle || '')}</div>
+        <div class="pp-hours">
+          <span class="pp-hours-label">Hours Worked</span>
+          <input type="number" class="pp-hours-input" data-hours="${hoursKey}" min="0" max="24" step="0.25" value="${p[hoursKey] || ''}" placeholder="0" inputmode="decimal" />
+          <span class="pp-hours-print" aria-hidden="true"></span>
+          <span class="pp-hours-units">hrs</span>
+        </div>
       </header>
       ${(data.sections || []).map(s => sectionHtml(s)).join('')}
       <button class="ctrl ctrl-add-section" onclick="addSection(this)">+ Add Section</button>
-      <div class="pp-notes">
-        <div class="pp-notes-label">Notes</div>
-        <div class="pp-notes-area" contenteditable="true">${escapeHtml(data.notes || '')}</div>
+      <div class="pp-notes-block">
+        <div class="pp-notes-section">
+          <div class="pp-notes-label">Planning Notes</div>
+          <div class="pp-notes-area" contenteditable="true" data-field="notes">${escapeHtml(data.notes || '')}</div>
+        </div>
+        <div class="pp-notes-section manager">
+          <div class="pp-notes-label">Household Manager's Notes</div>
+          <div class="pp-notes-area" contenteditable="true" data-field="managerNotes">${escapeHtml(data.managerNotes || '')}</div>
+        </div>
       </div>
     </article>
   `;
@@ -1095,7 +1291,10 @@ function renderPlan() {
     <div class="plan-toolbar">
       <button class="btn btn-ghost" id="back-btn">← Back to Dashboard</button>
       <div class="btn-row">
-        <button class="btn btn-secondary" id="save-btn" ${state.configOk ? '' : 'disabled title="Configure Supabase to save"'}>${p.id ? 'Update Saved Plan' : 'Save to Library'}</button>
+        <span class="save-indicator hidden" id="save-indicator">Saved ✓</span>
+        ${p.id ? '<button class="btn btn-secondary" id="copy-btn">Copy to New Week</button>' : ''}
+        ${p.id ? '<button class="btn btn-ghost" id="reset-checks-btn">Reset Checkmarks</button>' : ''}
+        <button class="btn btn-secondary" id="save-btn" ${state.configOk ? '' : 'disabled title="Configure Supabase to save"'}>${p.id ? 'Update' : 'Save to Library'}</button>
         <button class="btn" id="print-btn">Print</button>
       </div>
     </div>
@@ -1107,8 +1306,8 @@ function renderPlan() {
       </header>
 
       <section class="pp-tiles">
-        ${tile('tuesday', 'Tuesday', p.tuesday)}
-        ${tile('thursday', 'Thursday', p.thursday)}
+        ${tile('tuesday', 'Tuesday', p.tuesday, 'tuesdayHours')}
+        ${tile('thursday', 'Thursday', p.thursday, 'thursdayHours')}
       </section>
 
       <section class="pp-extras" data-tile="weeklyExtras">
@@ -1117,14 +1316,18 @@ function renderPlan() {
           <div class="pp-tile-subtitle">As Time Allows</div>
         </header>
         <ul class="pp-extras-list">
-          ${(p.weeklyExtras?.items || []).map(t => `
-            <li><span contenteditable="true">${escapeHtml(t)}</span><button class="ctrl ctrl-task-x" onclick="delTask(this)">&times;</button></li>
-          `).join('')}
+          ${(p.weeklyExtras?.items || []).map((it, i) => extraItemHtml(it, i)).join('')}
         </ul>
         <button class="ctrl ctrl-add-task" onclick="addExtra(this)">+ item</button>
-        <div class="pp-notes">
-          <div class="pp-notes-label">Notes</div>
-          <div class="pp-notes-area" contenteditable="true">${escapeHtml(p.weeklyExtras?.notes || '')}</div>
+        <div class="pp-notes-block">
+          <div class="pp-notes-section">
+            <div class="pp-notes-label">Planning Notes</div>
+            <div class="pp-notes-area" contenteditable="true" data-field="notes">${escapeHtml(p.weeklyExtras?.notes || '')}</div>
+          </div>
+          <div class="pp-notes-section manager">
+            <div class="pp-notes-label">Household Manager's Notes</div>
+            <div class="pp-notes-area" contenteditable="true" data-field="managerNotes">${escapeHtml(p.weeklyExtras?.managerNotes || '')}</div>
+          </div>
         </div>
       </section>
     </div>
@@ -1132,7 +1335,19 @@ function renderPlan() {
 
   document.getElementById('back-btn').addEventListener('click', () => switchView('dashboard'));
   document.getElementById('print-btn').addEventListener('click', () => window.print());
-  document.getElementById('save-btn').addEventListener('click', onSavePlan);
+  document.getElementById('save-btn').addEventListener('click', () => onSavePlan(true));
+  if (document.getElementById('copy-btn')) {
+    document.getElementById('copy-btn').addEventListener('click', onCopyToNewWeek);
+  }
+  if (document.getElementById('reset-checks-btn')) {
+    document.getElementById('reset-checks-btn').addEventListener('click', onResetChecks);
+  }
+
+  // Auto-save on any input/change/click that mutates plan state
+  const printable = document.getElementById('printable');
+  printable.addEventListener('input', onPlanInput);
+  printable.addEventListener('change', onPlanChange);
+  printable.addEventListener('click', onPlanClick);
 }
 
 function sectionHtml(s) {
@@ -1143,28 +1358,53 @@ function sectionHtml(s) {
         <button class="ctrl ctrl-sec-x" onclick="delSection(this)">&times;</button>
       </div>
       <ul class="pp-tasks">
-        ${(s.tasks||[]).map(t => `<li><span contenteditable="true">${escapeHtml(t)}</span><button class="ctrl ctrl-task-x" onclick="delTask(this)">&times;</button></li>`).join('')}
+        ${(s.tasks||[]).map((t, i) => taskItemHtml(t, i)).join('')}
       </ul>
       <button class="ctrl ctrl-add-task" onclick="addTask(this)">+ task</button>
     </div>
   `;
 }
 
-window.delSection = btn => btn.closest('.pp-section').remove();
-window.delTask = btn => btn.closest('li').remove();
+function taskItemHtml(t, i) {
+  const text = typeof t === 'string' ? t : (t.text || '');
+  const done = typeof t === 'object' && t.done;
+  return `<li class="${done ? 'done' : ''}">
+    <input type="checkbox" class="task-check" ${done ? 'checked' : ''} aria-label="Mark task complete" />
+    <span class="task-text" contenteditable="true">${escapeHtml(text)}</span>
+    <button class="ctrl ctrl-task-x" onclick="delTask(this)">&times;</button>
+  </li>`;
+}
+function extraItemHtml(t, i) {
+  const text = typeof t === 'string' ? t : (t.text || '');
+  const done = typeof t === 'object' && t.done;
+  return `<li class="${done ? 'done' : ''}">
+    <input type="checkbox" class="task-check" ${done ? 'checked' : ''} aria-label="Mark item complete" />
+    <span class="task-text" contenteditable="true">${escapeHtml(text)}</span>
+    <button class="ctrl ctrl-task-x" onclick="delTask(this)">&times;</button>
+  </li>`;
+}
+
+window.delSection = btn => { btn.closest('.pp-section').remove(); scheduleAutoSave(); };
+window.delTask = btn => { btn.closest('li').remove(); scheduleAutoSave(); };
 window.addTask = btn => {
   const ul = btn.previousElementSibling;
   const li = document.createElement('li');
-  li.innerHTML = '<span contenteditable="true">New task</span><button class="ctrl ctrl-task-x" onclick="delTask(this)">&times;</button>';
+  li.innerHTML = `<input type="checkbox" class="task-check" aria-label="Mark task complete" />
+    <span class="task-text" contenteditable="true">New task</span>
+    <button class="ctrl ctrl-task-x" onclick="delTask(this)">&times;</button>`;
   ul.appendChild(li);
-  selectAll(li.querySelector('span'));
+  selectAll(li.querySelector('.task-text'));
+  scheduleAutoSave();
 };
 window.addExtra = btn => {
   const ul = btn.previousElementSibling;
   const li = document.createElement('li');
-  li.innerHTML = '<span contenteditable="true">New item</span><button class="ctrl ctrl-task-x" onclick="delTask(this)">&times;</button>';
+  li.innerHTML = `<input type="checkbox" class="task-check" aria-label="Mark item complete" />
+    <span class="task-text" contenteditable="true">New item</span>
+    <button class="ctrl ctrl-task-x" onclick="delTask(this)">&times;</button>`;
   ul.appendChild(li);
-  selectAll(li.querySelector('span'));
+  selectAll(li.querySelector('.task-text'));
+  scheduleAutoSave();
 };
 window.addSection = btn => {
   const sec = document.createElement('div');
@@ -1174,11 +1414,16 @@ window.addSection = btn => {
       <div class="pp-sec-heading" contenteditable="true">New Section</div>
       <button class="ctrl ctrl-sec-x" onclick="delSection(this)">&times;</button>
     </div>
-    <ul class="pp-tasks"><li><span contenteditable="true">New task</span><button class="ctrl ctrl-task-x" onclick="delTask(this)">&times;</button></li></ul>
+    <ul class="pp-tasks">
+      <li><input type="checkbox" class="task-check" />
+        <span class="task-text" contenteditable="true">New task</span>
+        <button class="ctrl ctrl-task-x" onclick="delTask(this)">&times;</button></li>
+    </ul>
     <button class="ctrl ctrl-add-task" onclick="addTask(this)">+ task</button>
   `;
   btn.parentNode.insertBefore(sec, btn);
   selectAll(sec.querySelector('.pp-sec-heading'));
+  scheduleAutoSave();
 };
 function selectAll(el) {
   el.focus();
@@ -1189,72 +1434,161 @@ function selectAll(el) {
   s.addRange(r);
 }
 
+function onPlanInput(e) {
+  // Fires on contenteditable typing AND on number-input typing
+  scheduleAutoSave();
+}
+function onPlanChange(e) {
+  // Checkbox toggles
+  if (e.target.classList && e.target.classList.contains('task-check')) {
+    const li = e.target.closest('li');
+    li.classList.toggle('done', e.target.checked);
+    scheduleAutoSave();
+  }
+}
+function onPlanClick(e) {
+  // Allow checkbox clicks even when inside an editable region
+  if (e.target.classList && e.target.classList.contains('task-check')) {
+    e.stopPropagation();
+  }
+}
+
+let autoSaveTimer = null;
+function scheduleAutoSave() {
+  if (!state.configOk) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => onSavePlan(false), 700);
+}
+
 function readCurrentPlanFromDom() {
   const printable = document.getElementById('printable');
   const readTile = (sel) => {
     const tile = printable.querySelector(sel);
-    const subtitle = tile.querySelector('.pp-tile-subtitle')?.innerText.trim() || '';
+    const subtitle = tile.querySelector('[data-field="subtitle"]')?.innerText.trim() || '';
     const sections = Array.from(tile.querySelectorAll('.pp-section')).map(sec => ({
       heading: sec.querySelector('.pp-sec-heading')?.innerText.trim() || '',
-      tasks: Array.from(sec.querySelectorAll('.pp-tasks li span')).map(s => s.innerText.trim()).filter(Boolean)
+      tasks: Array.from(sec.querySelectorAll('.pp-tasks li')).map(li => ({
+        text: li.querySelector('.task-text')?.innerText.trim() || '',
+        done: !!li.querySelector('.task-check')?.checked
+      })).filter(t => t.text)
     }));
-    const notes = tile.querySelector('.pp-notes-area')?.innerText.trim() || '';
-    return { subtitle, sections, notes };
+    const notes = tile.querySelector('[data-field="notes"]')?.innerText.trim() || '';
+    const managerNotes = tile.querySelector('[data-field="managerNotes"]')?.innerText.trim() || '';
+    return { subtitle, sections, notes, managerNotes };
   };
   const extras = printable.querySelector('.pp-extras');
-  const extrasItems = Array.from(extras.querySelectorAll('.pp-extras-list li span')).map(s => s.innerText.trim()).filter(Boolean);
-  const extrasNotes = extras.querySelector('.pp-notes-area')?.innerText.trim() || '';
+  const extrasItems = Array.from(extras.querySelectorAll('.pp-extras-list li')).map(li => ({
+    text: li.querySelector('.task-text')?.innerText.trim() || '',
+    done: !!li.querySelector('.task-check')?.checked
+  })).filter(t => t.text);
+  const extrasNotes = extras.querySelector('[data-field="notes"]')?.innerText.trim() || '';
+  const extrasManagerNotes = extras.querySelector('[data-field="managerNotes"]')?.innerText.trim() || '';
+  const tuesdayHours = parseFloat(printable.querySelector('[data-hours="tuesdayHours"]')?.value) || 0;
+  const thursdayHours = parseFloat(printable.querySelector('[data-hours="thursdayHours"]')?.value) || 0;
+
   return {
     ...state.currentPlan,
     tuesday: readTile('[data-tile="tuesday"]'),
     thursday: readTile('[data-tile="thursday"]'),
-    weeklyExtras: { items: extrasItems, notes: extrasNotes }
+    weeklyExtras: { items: extrasItems, notes: extrasNotes, managerNotes: extrasManagerNotes },
+    tuesdayHours,
+    thursdayHours
   };
 }
 
-async function onSavePlan() {
+async function onSavePlan(explicit) {
   if (!state.configOk) return;
   const updated = readCurrentPlanFromDom();
   const btn = document.getElementById('save-btn');
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
+  const indicator = document.getElementById('save-indicator');
+  if (explicit) { btn.disabled = true; btn.textContent = 'Saving…'; }
   try {
     const id = await savePlan(updated);
     updated.id = id;
     state.currentPlan = updated;
     state.plansIndex = await loadPlansIndex();
-    btn.textContent = 'Saved ✓';
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.textContent = 'Update Saved Plan';
-    }, 1800);
+    if (explicit) {
+      btn.textContent = 'Saved ✓';
+      setTimeout(() => { btn.disabled = false; btn.textContent = 'Update'; }, 1600);
+    } else if (indicator) {
+      indicator.classList.remove('hidden'); indicator.classList.add('show');
+      setTimeout(() => { indicator.classList.remove('show'); indicator.classList.add('hidden'); }, 1400);
+    }
+    // If this was a brand-new plan (no id before), re-render so the toolbar shows Copy/Reset buttons
+    if (explicit && !document.getElementById('copy-btn')) renderPlan();
   } catch (e) {
-    btn.disabled = false;
-    btn.textContent = 'Save failed — retry';
+    if (explicit) { btn.disabled = false; btn.textContent = 'Save failed — retry'; }
+    console.error('save plan error', e);
+  }
+}
+
+async function onCopyToNewWeek() {
+  const current = state.currentPlan;
+  if (!current) return;
+  const proposedDefault = (() => {
+    const [y,m,d] = current.weekDate.split('-').map(Number);
+    const dt = new Date(y, m-1, d); dt.setDate(dt.getDate() + 7);
+    return dt.toISOString().slice(0,10);
+  })();
+  const newDate = prompt('Copy this plan to a new week. Pick a date (YYYY-MM-DD):', proposedDefault);
+  if (!newDate) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) { alert('Please use YYYY-MM-DD format.'); return; }
+
+  // Make a clean copy — keep tasks/sections, reset all checks/hours/manager fields
+  const stripDone = sections => (sections || []).map(s => ({
+    heading: s.heading,
+    tasks: (s.tasks || []).map(t => ({ text: typeof t === 'string' ? t : t.text, done: false }))
+  }));
+  const stripExtras = items => (items || []).map(it => ({ text: typeof it === 'string' ? it : it.text, done: false }));
+  const fresh = {
+    weekDate: newDate,
+    notes: current.notes || '',
+    tuesday: { subtitle: current.tuesday?.subtitle, sections: stripDone(current.tuesday?.sections), notes: current.tuesday?.notes || '', managerNotes: '' },
+    thursday: { subtitle: current.thursday?.subtitle, sections: stripDone(current.thursday?.sections), notes: current.thursday?.notes || '', managerNotes: '' },
+    weeklyExtras: { items: stripExtras(current.weeklyExtras?.items), notes: current.weeklyExtras?.notes || '', managerNotes: '' },
+    tuesdayHours: 0,
+    thursdayHours: 0,
+    createdAt: new Date().toISOString()
+  };
+  try {
+    const id = await savePlan(fresh);
+    fresh.id = id;
+    state.currentPlan = fresh;
+    state.plansIndex = await loadPlansIndex();
+    renderPlan();
+  } catch (e) {
+    alert('Copy failed — see console for details.');
     console.error(e);
   }
 }
 
+async function onResetChecks() {
+  if (!confirm('Uncheck all tasks and clear the hours? (Manager notes will be kept.)')) return;
+  const printable = document.getElementById('printable');
+  printable.querySelectorAll('.task-check').forEach(cb => {
+    cb.checked = false;
+    cb.closest('li').classList.remove('done');
+  });
+  printable.querySelectorAll('.pp-hours-input').forEach(inp => { inp.value = ''; });
+  scheduleAutoSave();
+}
+
 /* =====================================================================
-   VIEW: LIBRARY
+   VIEW: LIBRARY (with hours summary)
    ===================================================================== */
 function renderLibrary() {
   const main = document.getElementById('app-main');
   if (!state.configOk) {
-    main.innerHTML = `
-      <div class="config-warning">
-        <strong>Setup needed</strong>
-        Configure Supabase to use the library. See README for setup steps.
-      </div>`;
+    main.innerHTML = `<div class="config-warning"><strong>Setup needed</strong>
+      Configure Supabase to use the library. See README.</div>`;
     return;
   }
   if (!state.plansIndex.length) {
-    main.innerHTML = `
-      <div class="card">
-        <h2 class="card-title">Library</h2>
-        <div class="card-subtitle">Saved weekly plans, by month</div>
-        <div class="empty">No saved plans yet. Generate a plan and tap "Save to Library" to start your collection.</div>
-      </div>`;
+    main.innerHTML = `<div class="card">
+      <h2 class="card-title">Library</h2>
+      <div class="card-subtitle">Saved weekly plans, by month</div>
+      <div class="empty">No saved plans yet. Generate a plan and tap "Save to Library" to start your collection.</div>
+    </div>`;
     return;
   }
   const groups = {};
@@ -1263,31 +1597,45 @@ function renderLibrary() {
     (groups[k] = groups[k] || []).push(p);
   });
   const sortedKeys = Object.keys(groups).sort((a,b) => {
-    const da = new Date(groups[a][0].weekDate);
-    const db = new Date(groups[b][0].weekDate);
+    const da = new Date(groups[a][0].weekDate); const db = new Date(groups[b][0].weekDate);
     return db - da;
   });
+
   main.innerHTML = `
     <div class="card">
       <h2 class="card-title">Library</h2>
       <div class="card-subtitle">Saved weekly plans, by month</div>
-      ${sortedKeys.map(k => `
-        <div class="month-group">
-          <div class="month-head">${escapeHtml(k)}</div>
-          ${groups[k].sort((a,b) => new Date(b.weekDate) - new Date(a.weekDate)).map(p => `
-            <div class="plan-row">
-              <div>
-                <div class="plan-row-title">Week of ${escapeHtml(fmtWeekDate(p.weekDate))}</div>
-                <div class="plan-row-meta">Saved ${new Date(p.savedAt).toLocaleDateString()}</div>
-              </div>
-              <div class="plan-row-actions">
-                <button class="btn btn-secondary" data-action="open" data-id="${p.id}">Open</button>
-                <button class="btn btn-ghost" data-action="del" data-id="${p.id}">Delete</button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `).join('')}
+      ${sortedKeys.map(k => {
+        const monthPlans = groups[k].sort((a,b) => new Date(b.weekDate) - new Date(a.weekDate));
+        const monthTotal = monthPlans.reduce((sum, p) => sum + (p.tuesdayHours||0) + (p.thursdayHours||0), 0);
+        return `
+          <div class="month-group">
+            <div class="month-head">${escapeHtml(k)} ${monthTotal > 0 ? `<span style="font-size:11px;color:var(--muted);font-weight:normal;letter-spacing:0.1em;text-transform:uppercase;margin-left:8px;">— ${fmtHours(monthTotal)} hrs total</span>` : ''}</div>
+            ${monthPlans.map(p => {
+              const tue = p.tuesdayHours || 0;
+              const thu = p.thursdayHours || 0;
+              const total = tue + thu;
+              return `
+                <div class="plan-row">
+                  <div>
+                    <div class="plan-row-title">Week of ${escapeHtml(fmtWeekDate(p.weekDate))}</div>
+                    <div class="plan-row-meta">Saved ${new Date(p.savedAt).toLocaleDateString()}</div>
+                    <div class="plan-row-hours">
+                      ${total > 0 ? `
+                        <span class="pill">Tue ${fmtHours(tue)}h</span>
+                        <span class="pill">Thu ${fmtHours(thu)}h</span>
+                        <span class="pill total">${fmtHours(total)}h total</span>
+                      ` : '<span class="pill empty">No hours logged yet</span>'}
+                    </div>
+                  </div>
+                  <div class="plan-row-actions">
+                    <button class="btn btn-secondary" data-action="open" data-id="${p.id}">Open</button>
+                    <button class="btn btn-ghost" data-action="del" data-id="${p.id}">Delete</button>
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>`;
+      }).join('')}
     </div>
   `;
   main.querySelectorAll('button[data-action]').forEach(b => {
@@ -1295,7 +1643,7 @@ function renderLibrary() {
       const id = b.dataset.id;
       if (b.dataset.action === 'open') {
         const p = await loadPlan(id);
-        if (p) { state.currentPlan = p; switchView('plan'); }
+        if (p) { state.currentPlan = normalizePlanForEditing(p); switchView('plan'); }
       } else if (b.dataset.action === 'del') {
         if (!confirm('Delete this plan permanently?')) return;
         await deletePlan(id);
@@ -1307,7 +1655,7 @@ function renderLibrary() {
 }
 
 /* =====================================================================
-   VIEW SWITCHING
+   VIEW SWITCHING + INIT
    ===================================================================== */
 function switchView(v) {
   state.view = v;
@@ -1319,29 +1667,20 @@ function switchView(v) {
   else if (v === 'library') renderLibrary();
   window.scrollTo(0, 0);
 }
-
 document.getElementById('nav').addEventListener('click', e => {
   const b = e.target.closest('button[data-view]');
   if (b) switchView(b.dataset.view);
 });
 
-/* =====================================================================
-   INIT
-   ===================================================================== */
 (async () => {
   state.configOk = initSupabase();
   if (state.configOk) {
     try {
       const loaded = await loadStandingDuties();
-      if (loaded) {
-        state.standing = loaded;
-      } else {
-        await saveStandingDuties(DEFAULT_STANDING);
-      }
+      if (loaded) state.standing = loaded;
+      else await saveStandingDuties(DEFAULT_STANDING);
       state.plansIndex = await loadPlansIndex();
-    } catch (e) {
-      console.error('Initial load error:', e);
-    }
+    } catch (e) { console.error('Initial load error:', e); }
   }
   switchView('dashboard');
 })();
