@@ -8,12 +8,14 @@ to a month-organized library.
 
 ## What's in the app
 
-- **Dashboard:** generate AI plans from week notes, edit standing duties
-- **Editable plan view:** every task has a checkbox the manager can tick off; each day has an Hours Worked input and a separate "Household Manager's Notes" area below your planning notes
+There are two tabs. **Plans** is the default landing view — your household manager opens this to see her current week. **Plan Builder** is where you generate and edit standing duties.
+
+- **Plans (default tab):** the most recent plan is featured at the top with a big "Open Plan" button; below it, past weeks are listed by month with hours summaries.
+- **Plan Builder:** generate new AI-drafted plans from your week notes; edit your standing duties.
+- **Editable plan view:** every task has a checkbox the manager can tick off; each day has an Hours Worked input and a separate "Household Manager's Notes" area below your planning notes. Auto-saves on every change.
 - **Print:** prints with empty checkboxes, blank hours field, and blank manager notes — ready for a paper-based shift. Screen view keeps everything she's input.
-- **Copy to New Week:** turn any saved plan into a template for an upcoming week (resets all checks, hours, and manager notes; keeps tasks/sections/your planning notes)
-- **Reset Checkmarks:** clears all checks + hours on the current plan (keeps manager notes)
-- **Library:** plans grouped by month, with a per-week and per-month hours summary so you can see at a glance what she worked
+- **Overflow menu (···) on each plan:** Copy to New Week (uses the plan as a template, resets checks/hours/manager notes), Reset Checkmarks & Hours (keeps manager notes), Delete This Plan.
+- **Mobile-friendly:** designed to work as well on a phone as on a desktop. Touch targets are sized for fingers; the toolbar adapts; the duties editor uses bigger inputs on mobile.
 
 ---
 
@@ -119,7 +121,7 @@ To customize it:
 
 Open the URL on your iPhone or computer:
 
-1. The Dashboard should load with your standing duties pre-filled.
+1. The Plans view loads first (your household manager will see this when she opens the app). To create a new plan, tap **Plan Builder** in the top-right.
 2. Type a quick note in "Your thoughts & priorities", e.g. "Liam's
    birthday party Saturday — 12 kids. In-laws Sunday."
 3. Tap **Generate Plan**. After ~5–15 seconds you should see your
