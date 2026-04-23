@@ -1,0 +1,14 @@
+{
+  "name": "house-manager-app",
+  "version": "1.0.0",
+  "description": "Personal household manager planning app — AI-generated weekly plans for a Spokane, WA family",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/build-config.js",
+    "dev": "node scripts/build-config.js && netlify dev",
+    "deploy": "netlify deploy --prod"
+  }
+}
