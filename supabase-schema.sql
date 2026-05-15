@@ -21,6 +21,14 @@ create table if not exists plans (
 
 create index if not exists plans_week_date_idx on plans(week_date desc);
 
+-- App-wide settings (single row): pay cycle config, etc.
+create table if not exists app_settings (
+  id integer primary key default 1,
+  data jsonb not null default '{}',
+  updated_at timestamptz default now(),
+  constraint settings_single_row check (id = 1)
+);
+
 -- =========================================================================
 -- Row-level security
 -- =========================================================================
@@ -33,3 +41,4 @@ create index if not exists plans_week_date_idx on plans(week_date desc);
 
 alter table standing_duties disable row level security;
 alter table plans disable row level security;
+alter table app_settings disable row level security;

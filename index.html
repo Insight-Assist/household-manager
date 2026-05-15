@@ -347,6 +347,115 @@
   .save-indicator.show { opacity: 1; }
   .save-indicator.hidden { opacity: 0; }
 
+  /* ============ PAY CYCLE BANNER ============ */
+  .pay-cycle-banner {
+    background: var(--ivory);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 22px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pcb-info { flex: 1; min-width: 0; }
+  .pcb-eyebrow {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .pcb-range {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .pcb-total {
+    font-family: "Iowan Old Style", Georgia, serif;
+    font-size: 26px;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .pcb-total .units {
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-left: 4px;
+  }
+  .pcb-edit {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .pcb-edit:hover { background: var(--tile-bg); color: var(--text); border-color: var(--accent); }
+
+  /* ============ MODAL ============ */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 42, 38, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 16px;
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--ivory);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 440px;
+    padding: 24px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+  }
+  .modal h3 {
+    font-family: "Iowan Old Style", Georgia, serif;
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .modal .modal-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 18px;
+  }
+  .modal .modal-help {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .modal-field { margin-bottom: 14px; }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 18px;
+  }
+
   /* ============ PLANS LIBRARY ============ */
   .featured-plan {
     background: var(--text);
@@ -848,6 +957,15 @@
     .card-title { font-size: 19px; }
     .card-subtitle { font-size: 11px; letter-spacing: 0.18em; margin-bottom: 14px; }
 
+    .pay-cycle-banner {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+    }
+    .pcb-total { font-size: 24px; }
+    .pcb-edit { align-self: flex-start; }
+
     .featured-plan {
       padding: 20px;
       flex-direction: column;
@@ -1011,6 +1129,31 @@
 
 <main class="app-main" id="app-main"></main>
 
+<!-- Pay cycle settings modal -->
+<div class="modal-backdrop" id="settings-modal-backdrop">
+  <div class="modal" role="dialog" aria-labelledby="settings-modal-title">
+    <h3 id="settings-modal-title">Pay Cycle Settings</h3>
+    <div class="modal-subtitle">Used for the hours total at the top of Plans</div>
+    <div class="modal-help">
+      Set the start date of any past pay cycle (the "anchor"), and the cycle length. The app uses these
+      to figure out which cycle today falls into.
+    </div>
+    <div class="modal-field">
+      <label class="field" for="settings-anchor">Anchor date (start of a past cycle)</label>
+      <input type="date" id="settings-anchor" />
+    </div>
+    <div class="modal-field">
+      <label class="field" for="settings-length">Cycle length (days)</label>
+      <input type="number" id="settings-length" min="1" max="60" step="1" />
+    </div>
+    <div id="settings-preview" style="font-size: 12px; color: var(--muted); margin-top: 12px; padding: 10px 12px; background: var(--tile-bg-soft); border-radius: 6px; line-height: 1.5;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="settings-cancel">Cancel</button>
+      <button class="btn" id="settings-save">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =====================================================================
    DEFAULTS
@@ -1032,11 +1175,19 @@ const DEFAULT_STANDING = {
   ]
 };
 
+const DEFAULT_PAY_SETTINGS = {
+  // anchorDate is any known start of a past pay cycle (YYYY-MM-DD)
+  // cycleLengthDays is the number of days in a cycle (14 for bi-weekly)
+  anchorDate: '2025-01-07', // an arbitrary past Tuesday; user will update this
+  cycleLengthDays: 14
+};
+
 const state = {
   view: 'plans',
   currentPlan: null,
   standing: DEFAULT_STANDING,
   plansIndex: [],
+  paySettings: DEFAULT_PAY_SETTINGS,
   configOk: false
 };
 
@@ -1064,6 +1215,17 @@ async function saveStandingDuties(duties) {
     id: 1, data: duties, updated_at: new Date().toISOString()
   });
   if (error) console.error('save standing', error);
+}
+async function loadAppSettings() {
+  const { data, error } = await sb.from('app_settings').select('data').eq('id', 1).maybeSingle();
+  if (error) { console.error('load settings', error); return null; }
+  return data?.data || null;
+}
+async function saveAppSettings(settings) {
+  const { error } = await sb.from('app_settings').upsert({
+    id: 1, data: settings, updated_at: new Date().toISOString()
+  });
+  if (error) { console.error('save settings', error); throw error; }
 }
 async function loadPlansIndex() {
   const { data, error } = await sb.from('plans')
@@ -1183,6 +1345,64 @@ function fmtHours(n) {
   if (!n || n === 0) return '0';
   return Number(n) % 1 === 0 ? String(n) : Number(n).toFixed(2).replace(/\.?0+$/, '');
 }
+
+/* =====================================================================
+   PAY CYCLE HELPERS
+   ===================================================================== */
+// Parse a YYYY-MM-DD string into a local-time Date at midnight (no TZ shenanigans)
+function parseLocalDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+// Format Date → YYYY-MM-DD (local)
+function toIsoDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function daysBetween(aIso, bIso) {
+  const ms = parseLocalDate(bIso) - parseLocalDate(aIso);
+  return Math.floor(ms / (1000 * 60 * 60 * 24));
+}
+// Given an anchor date and cycle length, returns the {start, end} ISO dates
+// of the cycle that contains the given target date.
+function cycleContaining(anchorIso, cycleLengthDays, targetIso) {
+  const len = Math.max(1, parseInt(cycleLengthDays, 10) || 14);
+  const diff = daysBetween(anchorIso, targetIso);
+  // Number of cycles elapsed since anchor (can be negative for dates before anchor)
+  const cyclesElapsed = Math.floor(diff / len);
+  const startDate = parseLocalDate(anchorIso);
+  startDate.setDate(startDate.getDate() + cyclesElapsed * len);
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + len - 1);
+  return { startIso: toIsoDate(startDate), endIso: toIsoDate(endDate) };
+}
+function currentPayCycle() {
+  const { anchorDate, cycleLengthDays } = state.paySettings;
+  const today = toIsoDate(new Date());
+  return cycleContaining(anchorDate, cycleLengthDays, today);
+}
+// Sums hours from all plans whose weekDate falls inside [startIso, endIso]
+function sumHoursInRange(startIso, endIso) {
+  let tue = 0, thu = 0;
+  state.plansIndex.forEach(p => {
+    if (p.weekDate >= startIso && p.weekDate <= endIso) {
+      tue += p.tuesdayHours || 0;
+      thu += p.thursdayHours || 0;
+    }
+  });
+  return { tue, thu, total: tue + thu };
+}
+// Human label: "Nov 18 – Dec 1, 2025"
+function fmtCycleRange(startIso, endIso) {
+  const s = parseLocalDate(startIso);
+  const e = parseLocalDate(endIso);
+  const sameYear = s.getFullYear() === e.getFullYear();
+  const sOpts = { month: 'short', day: 'numeric' };
+  const eOpts = sameYear ? { month: 'short', day: 'numeric', year: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' };
+  return `${s.toLocaleDateString('en-US', sOpts)} – ${e.toLocaleDateString('en-US', eOpts)}`;
+}
 function normalizePlanForEditing(p) {
   if (!p) return p;
   const fixSections = secs => (secs || []).map(s => ({
@@ -1203,6 +1423,27 @@ function normalizePlanForEditing(p) {
 /* =====================================================================
    VIEW: PLANS (was Library — now the default landing view)
    ===================================================================== */
+function payCycleBannerHtml() {
+  if (!state.configOk) return '';
+  const cycle = currentPayCycle();
+  const sum = sumHoursInRange(cycle.startIso, cycle.endIso);
+  return `
+    <div class="pay-cycle-banner">
+      <div class="pcb-info">
+        <div class="pcb-eyebrow">Current Pay Cycle</div>
+        <div class="pcb-range">${escapeHtml(fmtCycleRange(cycle.startIso, cycle.endIso))}</div>
+        <div class="pcb-total">${fmtHours(sum.total)}<span class="units">hrs</span></div>
+      </div>
+      <button class="pcb-edit" id="pcb-edit-btn">Edit Cycle</button>
+    </div>
+  `;
+}
+
+function bindPayCycleEvents() {
+  const editBtn = document.getElementById('pcb-edit-btn');
+  if (editBtn) editBtn.addEventListener('click', openSettingsModal);
+}
+
 function renderPlans() {
   const main = document.getElementById('app-main');
   if (!state.configOk) {
@@ -1210,12 +1451,13 @@ function renderPlans() {
     return;
   }
   if (!state.plansIndex.length) {
-    main.innerHTML = `
+    main.innerHTML = payCycleBannerHtml() + `
       <div class="card">
         <h2 class="card-title">Plans</h2>
         <div class="card-subtitle">Weekly plans, by month</div>
         <div class="empty">No plans here yet. Once a plan is created in Plan Builder, it'll show up here.</div>
       </div>`;
+    bindPayCycleEvents();
     return;
   }
 
@@ -1235,7 +1477,7 @@ function renderPlans() {
     return db - da;
   });
 
-  main.innerHTML = `
+  main.innerHTML = payCycleBannerHtml() + `
     <div class="featured-plan">
       <div>
         <div class="featured-eyebrow">Most Recent Plan</div>
@@ -1268,6 +1510,8 @@ function renderPlans() {
       </div>
     ` : ''}
   `;
+
+  bindPayCycleEvents();
 
   main.querySelectorAll('button[data-action]').forEach(b => {
     b.addEventListener('click', async () => {
@@ -1861,6 +2105,74 @@ async function onDeleteCurrent() {
 }
 
 /* =====================================================================
+   SETTINGS MODAL (pay cycle)
+   ===================================================================== */
+function openSettingsModal() {
+  const backdrop = document.getElementById('settings-modal-backdrop');
+  const anchorIn = document.getElementById('settings-anchor');
+  const lenIn = document.getElementById('settings-length');
+  anchorIn.value = state.paySettings.anchorDate;
+  lenIn.value = state.paySettings.cycleLengthDays;
+  updateSettingsPreview();
+  backdrop.classList.add('open');
+}
+function closeSettingsModal() {
+  document.getElementById('settings-modal-backdrop').classList.remove('open');
+}
+function updateSettingsPreview() {
+  const anchor = document.getElementById('settings-anchor').value;
+  const len = parseInt(document.getElementById('settings-length').value, 10) || 14;
+  const preview = document.getElementById('settings-preview');
+  if (!anchor || !/^\d{4}-\d{2}-\d{2}$/.test(anchor)) {
+    preview.textContent = 'Enter a valid anchor date to see preview.';
+    return;
+  }
+  const today = toIsoDate(new Date());
+  const cycle = cycleContaining(anchor, len, today);
+  preview.innerHTML = `<strong>Preview:</strong> Today falls in the cycle <strong>${escapeHtml(fmtCycleRange(cycle.startIso, cycle.endIso))}</strong> (${len}-day cycle).`;
+}
+async function saveSettingsFromModal() {
+  const anchor = document.getElementById('settings-anchor').value;
+  const len = parseInt(document.getElementById('settings-length').value, 10);
+  if (!anchor || !/^\d{4}-\d{2}-\d{2}$/.test(anchor)) {
+    alert('Please pick a valid anchor date.');
+    return;
+  }
+  if (!len || len < 1 || len > 60) {
+    alert('Cycle length must be between 1 and 60 days.');
+    return;
+  }
+  state.paySettings = { anchorDate: anchor, cycleLengthDays: len };
+  if (state.configOk) {
+    try {
+      await saveAppSettings(state.paySettings);
+    } catch (e) {
+      const msg = (e && e.message) || String(e);
+      if (msg.includes('app_settings') || msg.includes('relation') || msg.includes('does not exist')) {
+        alert(
+          'Could not save settings — the app_settings table is missing in your Supabase project.\n\n' +
+          'Run the updated supabase-schema.sql in your Supabase SQL Editor, then try again.'
+        );
+      } else {
+        alert('Could not save settings: ' + msg);
+      }
+      return;
+    }
+  }
+  closeSettingsModal();
+  // Re-render to reflect new cycle calculation
+  if (state.view === 'plans') renderPlans();
+}
+// Wire up modal events on page load
+document.getElementById('settings-cancel').addEventListener('click', closeSettingsModal);
+document.getElementById('settings-save').addEventListener('click', saveSettingsFromModal);
+document.getElementById('settings-anchor').addEventListener('input', updateSettingsPreview);
+document.getElementById('settings-length').addEventListener('input', updateSettingsPreview);
+document.getElementById('settings-modal-backdrop').addEventListener('click', e => {
+  if (e.target.id === 'settings-modal-backdrop') closeSettingsModal();
+});
+
+/* =====================================================================
    VIEW SWITCHING + INIT
    ===================================================================== */
 function switchView(v) {
@@ -1886,6 +2198,14 @@ document.getElementById('nav').addEventListener('click', e => {
       if (loaded) state.standing = loaded;
       else await saveStandingDuties(DEFAULT_STANDING);
       state.plansIndex = await loadPlansIndex();
+      const loadedSettings = await loadAppSettings();
+      if (loadedSettings && loadedSettings.anchorDate && loadedSettings.cycleLengthDays) {
+        state.paySettings = loadedSettings;
+      } else {
+        // First-run: try to save defaults so the row exists. Quietly skip if table missing
+        // (user will see a clear error if they try to edit cycle settings).
+        try { await saveAppSettings(state.paySettings); } catch (e) { console.warn('app_settings save skipped:', e.message); }
+      }
     } catch (e) { console.error('Initial load error:', e); }
   }
   switchView('plans');

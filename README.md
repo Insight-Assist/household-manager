@@ -10,7 +10,8 @@ to a month-organized library.
 
 There are two tabs. **Plans** is the default landing view — your household manager opens this to see her current week. **Plan Builder** is where you generate and edit standing duties.
 
-- **Plans (default tab):** the most recent plan is featured at the top with a big "Open Plan" button; below it, past weeks are listed by month with hours summaries.
+- **Plans (default tab):** shows the current pay cycle hours total at the top, then the most recent plan featured with a big "Open Plan" button, then past weeks listed by month with hours summaries.
+- **Pay cycle settings:** tap "Edit Cycle" on the banner to set the anchor date (any past cycle start) and cycle length (default 14 days for bi-weekly).
 - **Plan Builder:** generate new AI-drafted plans from your week notes; edit your standing duties.
 - **Editable plan view:** every task has a checkbox the manager can tick off; each day has an Hours Worked input and a separate "Household Manager's Notes" area below your planning notes. Auto-saves on every change.
 - **Print:** prints with empty checkboxes, blank hours field, and blank manager notes — ready for a paper-based shift. Screen view keeps everything she's input.
@@ -146,6 +147,12 @@ tweaked `generate-plan.js`):
 4. Your env vars are never touched.
 
 You don't need to re-paste anything. Ever.
+
+> **When schema changes:** Occasionally an update adds a new database
+> table (the pay cycle feature added `app_settings`, for example).
+> In those cases, re-run `supabase-schema.sql` in Supabase's SQL
+> Editor. The schema uses `create table if not exists` so re-running
+> is always safe — it won't touch your existing data.
 
 ---
 
